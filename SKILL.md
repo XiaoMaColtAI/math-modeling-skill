@@ -140,32 +140,34 @@ description: 本技能应在用户要求"数学建模"、"建模比赛"、"数�
 
 ### 工具脚本
 
-- **`scripts/analyze_appendix.py`** - 附录表格分析工具
+- **`scripts/analyze_appendix.py`** - 附录表格转换工具
 
-  快速查看题目中"附录"文件夹的表格完整内容（所有行、列、单元格数据）。
+  将Excel文件无损转换为CSV格式，便于AI直接读取。
 
   **使用方法**：
 
   ```bash
-  # 分析当前目录下的 附录/ 文件夹
+  # 转换当前目录下的 附录/ 文件夹
   python scripts/analyze_appendix.py
 
-  # 分析指定路径
+  # 转换指定路径
   python scripts/analyze_appendix.py --path ./data
 
-  # 分析单个文件
+  # 转换单个文件
   python scripts/analyze_appendix.py --file 附录1.xlsx
-
-  # 保存完整内容到文件
-  python scripts/analyze_appendix.py --save full_content.txt
   ```
 
-  **功能特点**：
+  **使用流程**：
+  1. 运行转换脚本：`python scripts/analyze_appendix.py`
+  2. 脚本自动将Excel文件转换为同名的CSV文件
+  3. **使用Read工具直接读取转换后的CSV文件**查看完整数据
+
+  **转换特点**：
   - 自动查找 `附录/`、`附件/`、`data/` 等文件夹
-  - 支持 .xlsx、.xls、.csv 格式
-  - 输出所有行、列、单元格的完整数据
-  - 显示每个 sheet 的维度和列名
-  - 可保存到文本文件供后续查看
+  - 支持 .xlsx、.xls 格式
+  - 无损转换：保留所有行、列、单元格数据
+  - UTF-8 with BOM编码，支持中文
+  - 每个sheet生成独立的CSV文件
 
 ## 使用建议
 
