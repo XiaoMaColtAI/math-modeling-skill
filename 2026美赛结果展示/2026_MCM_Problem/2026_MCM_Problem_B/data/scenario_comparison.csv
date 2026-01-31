@@ -1,0 +1,4 @@
+﻿Scenario,Time (years),Cost ($B),Unit Cost ($/ton),Elevator (MT),Rocket (MT),Carbon (kT CO2),Env Score,Env Index,Success Rate,Valid
+Elevator Only,207.0,594.0,5940.0,100.0,0.0,10000.0,0.0,10.0,95.0%,Pass
+Rocket Only,90.0,24.78,247.79,0.0,100.0,40000.0,0.0,118.743,98.0%,Pass
+Hybrid,35.0,43.54,435.42,12.5,5.81,3573.36,25.9,7.413,96.0%,Warning

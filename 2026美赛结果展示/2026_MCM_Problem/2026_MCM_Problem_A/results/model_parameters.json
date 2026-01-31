@@ -1,0 +1,93 @@
+{
+  "battery_params": {
+    "Q_nom": 4000,
+    "V_nom": 3.85,
+    "SOC_0": 1.0,
+    "SOC_cutoff": 0.05,
+    "alpha_age": 0.0002,
+    "cycle_count": 100
+  },
+  "power_params": {
+    "P_base": 0.5,
+    "P_screen_base": 0.3,
+    "alpha_B": 2.0,
+    "P_cpu_idle": 0.2,
+    "P_cpu_max": 3.5,
+    "gamma": 1.5,
+    "P_wifi": 0.15,
+    "P_4g": 0.6,
+    "P_5g": 1.0,
+    "P_gps": 0.5,
+    "T_ref": 25,
+    "alpha_T": 0.001
+  },
+  "TTE_summary": [
+    {
+      "Scenario": "Idle",
+      "TTE_hours": 67.97358357910404,
+      "TTE_formatted": "68.0h",
+      "Power_avg_W": 0.7593338095116626,
+      "CI_lower": 59.29093935307053,
+      "CI_upper": 73.03050977960267,
+      "Energy_Wh": 51.61464019710542,
+      "Validation": "能量守恒检查: 警告"
+    },
+    {
+      "Scenario": "Web Browsing",
+      "TTE_hours": 26.847667065125584,
+      "TTE_formatted": "26.8h",
+      "Power_avg_W": 1.9224999999999999,
+      "CI_lower": 24.13471783377835,
+      "CI_upper": 28.309183900825783,
+      "Energy_Wh": 51.614640038445096,
+      "Validation": "能量守恒检查: 警告"
+    },
+    {
+      "Scenario": "Video Playback",
+      "TTE_hours": 25.303685380643103,
+      "TTE_formatted": "25.3h",
+      "Power_avg_W": 2.0398072149480058,
+      "CI_lower": 23.1514901766716,
+      "CI_upper": 28.127930064735676,
+      "Energy_Wh": 51.61463981441931,
+      "Validation": "能量守恒检查: 警告"
+    },
+    {
+      "Scenario": "Gaming",
+      "TTE_hours": 9.662731482904602,
+      "TTE_formatted": "9.7h",
+      "Power_avg_W": 5.3416200270976075,
+      "CI_lower": 9.284311691225104,
+      "CI_upper": 10.347152895105351,
+      "Energy_Wh": 51.614639882476126,
+      "Validation": "能量守恒检查: 警告"
+    },
+    {
+      "Scenario": "Navigation",
+      "TTE_hours": 14.99840770641291,
+      "TTE_formatted": "15.0h",
+      "Power_avg_W": 3.4413413022844526,
+      "CI_lower": 14.534617248169868,
+      "CI_upper": 15.889628501199022,
+      "Energy_Wh": 51.614639846633686,
+      "Validation": "能量守恒检查: 警告"
+    },
+    {
+      "Scenario": "Video Call",
+      "TTE_hours": 14.136409062008022,
+      "TTE_formatted": "14.1h",
+      "Power_avg_W": 3.6511846612937138,
+      "CI_lower": 12.156201723966337,
+      "CI_upper": 15.761206869216783,
+      "Energy_Wh": 51.61463995612077,
+      "Validation": "能量守恒检查: 警告"
+    }
+  ],
+  "improvements": [
+    "Enhanced numerical precision",
+    "Physical constraint validation",
+    "Improved temperature model",
+    "Monte Carlo uncertainty estimation",
+    "Energy conservation check"
+  ]
+}

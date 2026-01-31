@@ -1,0 +1,97 @@
+================================================================================
+2026 MCM PROBLEM C: DATA WITH THE STARS
+COMPREHENSIVE ANALYSIS REPORT
+================================================================================
+
+1. DATA OVERVIEW
+----------------------------------------
+Total contestants: 421
+Seasons covered: 1 to 34
+Total seasons: 34
+
+2. VOTING METHOD COMPARISON
+----------------------------------------
+Analyzed 10 seasons
+Average judge-placement correlation: 0.979
+
+3. CONTROVERSIAL CASES ANALYSIS
+----------------------------------------
+Season 2: Jerry Rice
+  Final Placement: 2
+  Avg Score: 16.38 (Season Avg: 10.96)
+  Weeks with Lowest Score: 0/8
+
+Season 4: Billy Ray Cyrus
+  Final Placement: 5
+  Avg Score: 13.82 (Season Avg: 13.97)
+  Weeks with Lowest Score: 1/8
+
+Season 11: Bristol Palin
+  Final Placement: 3
+  Avg Score: 20.83 (Season Avg: 13.45)
+  Weeks with Lowest Score: 0/10
+
+Season 27: Bobby Bones
+  Final Placement: 1
+  Avg Score: 18.32 (Season Avg: 13.80)
+  Weeks with Lowest Score: 0/9
+
+4. IMPACT FACTOR ANALYSIS
+----------------------------------------
+Age-Placement Correlation:
+  0.433
+
+Score-Placement Correlation:
+  -0.853
+
+Top 5 Industries by Performance:
+  1. Conservationist: Avg Placement 1.00
+  2. Musician: Avg Placement 2.00
+  3. Social media personality: Avg Placement 2.00
+  4. Producer: Avg Placement 2.00
+  5. Motivational Speaker: Avg Placement 3.00
+
+Top 5 Professional Dancers:
+  1. Derek Hough: Avg Placement 2.94 (17 seasons)
+  2. Julianne Hough: Avg Placement 4.20 (5 seasons)
+  3. Daniella Karagach: Avg Placement 4.60 (5 seasons)
+  4. Mark Ballas: Avg Placement 5.19 (21 seasons)
+  5. Valentin Chmerkovskiy: Avg Placement 5.26 (19 seasons)
+
+5. NEW VOTING SYSTEM PROPOSAL
+----------------------------------------
+System Name: Weighted Adaptive Voting System
+Components:
+  1. Judge Percentage
+  2. Fan Percentage
+  3. Improvement Bonus
+  4. Consistency Bonus
+
+Adaptive Weights:
+  Early weeks: [0.6, 0.3, 0.1]
+  Middle weeks: [0.4, 0.4, 0.2]
+  Late weeks: [0.3, 0.5, 0.2]
+
+6. RECOMMENDATIONS FOR DWTS PRODUCERS
+----------------------------------------
+Based on our analysis, we recommend:
+
+1. ADOPT THE PERCENTAGE-BASED METHOD:
+   - Shows stronger correlation with judge scores
+   - More mathematically consistent
+
+2. IMPLEMENT WEIGHTED ADAPTIVE SYSTEM:
+   - Balances judge expertise and fan engagement
+   - Encourages improvement throughout competition
+
+3. ADD PROGRESS BONUS:
+   - Reduces likelihood of controversial outcomes
+   - Rewards consistent improvement
+
+4. MAINTAIN JUDGE ELIMINATION POWER:
+   - Keep bottom-two judge elimination for close cases
+   - Adds safety valve for extreme fan voting patterns
+
+================================================================================
+END OF REPORT
+================================================================================
