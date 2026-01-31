@@ -1,0 +1,74 @@
+======================================================================
+2026 ICM Problem F: Gen-AI Impact on Career Education
+Analysis Results
+======================================================================
+
+[Part 1] Employment Demand Prediction (2025-2030)
+----------------------------------------------------------------------
+
+Software Engineer:
+  2025: 2195 thousand
+  2026: 2328 thousand
+  2027: 2469 thousand
+  2028: 2618 thousand
+  2029: 2777 thousand
+  2030: 2945 thousand
+
+Electrician:
+  2025: 792 thousand
+  2026: 808 thousand
+  2027: 825 thousand
+  2028: 842 thousand
+  2029: 859 thousand
+  2030: 877 thousand
+
+Graphic Designer:
+  2025: 331 thousand
+  2026: 336 thousand
+  2027: 342 thousand
+  2028: 347 thousand
+  2029: 353 thousand
+  2030: 359 thousand
+
+
+[Part 2] AI Replaceability Evaluation (TOPSIS)
+----------------------------------------------------------------------
+
+Software Engineer:
+  Closeness Coefficient: 0.6221
+  Risk Level: High
+
+Electrician:
+  Closeness Coefficient: 0.3885
+  Risk Level: Low
+
+Graphic Designer:
+  Closeness Coefficient: 0.6099
+  Risk Level: High
+
+
+[Part 3] Education Strategy Simulation (10-year forecast)
+----------------------------------------------------------------------
+
+Software Engineer:
+  Initial Students: 1000
+  Final Students: 2059
+  Average Employment Rate: 92.51%
+  Final Employment Rate: 95.00%
+
+Electrician:
+  Initial Students: 1000
+  Final Students: 1481
+  Average Employment Rate: 93.86%
+  Final Employment Rate: 95.00%
+
+Graphic Designer:
+  Initial Students: 1000
+  Final Students: 1525
+  Average Employment Rate: 80.99%
+  Final Employment Rate: 89.00%
+
+
+======================================================================
+End of Results
+======================================================================
