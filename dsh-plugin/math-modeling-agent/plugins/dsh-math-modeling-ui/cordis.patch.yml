@@ -1,0 +1,5 @@
+# dsh-math-modeling-ui bundle patch（dsh.bundle manifest 要求的加载配置）
+# 单包单插件：数学建模进度看板（详情面板 + 设置页开关）一键到位。
+- insert:
+    - id: dsh-math-modeling-ui
+      name: dsh-math-modeling-ui

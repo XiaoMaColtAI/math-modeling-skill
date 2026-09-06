@@ -11,10 +11,8 @@
 const META_DIR = '.math-modeling'
 const STATE_NAME = 'state.json'
 // 内置 SKILL_ROOT：从插件自身位置推导（插件位于 <预设>/plugins/ 下，知识库位于 <预设>/skills/math-modeling）
-// 这样整个预设目录可整体移动/复制到任何机器，无需改任何路径。
-const __here = typeof import.meta !== 'undefined' && import.meta.url ? import.meta.url : ''
-// 内置知识库路径：从插件自身位置推导（插件位于 <预设>/plugins/ 下，知识库位于 <预设>/skills/math-modeling）。
 // 推导失败时为 ''（不携带任何本机路径），此时 mm_project_init 会要求显式传入 skillRoot。
+const __here = typeof import.meta !== 'undefined' && import.meta.url ? import.meta.url : ''
 let __bundleRoot = ''
 try {
   if (__here) {
@@ -83,6 +81,7 @@ export async function apply(ctx) {
   const agents = ctx.get('agents')
   const sandboxPolicy = ctx.get('sandboxPolicy')
   const systemPrompt = ctx.get('systemPrompt')
+  const settings = ctx.get('settings')
   if (!fs || !shell) return
 
   const join = (...parts) => parts.filter(Boolean).join('/')
@@ -298,7 +297,7 @@ export async function apply(ctx) {
     state.currentPhase = 'modeling'
     log('init', { skillRoot, projectRoot, competition: state.project.competition, edition: state.project.edition, subproblems, paperFormat })
     await persist()
-    return Object.assign({ ok: true, notice: '项目已初始化：已激活 math-modeling Skill 协议。当前阶段=建模手；目标竞赛=' + state.project.competition + (state.project.edition ? ' ' + state.project.edition : '') + '；计划读取的入口=references/roles/建模手/SKILL.md 与 tools/*/SKILL.md；官方规则未核验项请在首轮进度更新中标为待核验。' }, summaryOf())
+    return Object.assign({ ok: true, notice: '项目已初始化：已激活 math-modeling Skill 协议。当前阶段=建模手；目标竞赛=' + state.project.competition + (state.project.edition ? ' ' + state.project.edition : '') + '；计划读取的入口=references/roles/建模手/SKILL.md 与 tools/*/SKILL.md；官方规则未核验项请在首轮进度更新中标为待核验。\n\n💡 如需进度看板，请粘贴：读取 ui-dock/加载UI看板提示词.md 中的 prompt 并执行' }, summaryOf())
   }
 
   async function enterPhase(phase) {
@@ -782,11 +781,49 @@ export async function apply(ctx) {
       required: ['action'],
       execute: async (args) => { await loadState(await resolveProjectRoot({})); return todoManage(args.action || 'list', args.phase, args.index, args.note) },
     },
+    {
+      name: 'mm_ui_toggle',
+      description: '数学建模 UI 看板开关：get 查当前状态；on 开启；off 关闭。设置持久化（重起 DSH 仍生效）。',
+      parameters: {
+        action: { type: 'string', enum: ['get', 'on', 'off'], required: true, description: 'get=查状态；on=开启；off=关闭' },
+      },
+      required: ['action'],
+      execute: async (args) => {
+        if (!settings) return { ok: false, error: 'settings 服务不可用' }
+        const action = args.action || 'get'
+        const current = (() => { try { return settings.get('math-modeling-ui') || {} } catch (e) { return {} } })()
+        if (action === 'get') return { ok: true, enabled: current.enabled !== false }
+        const next = action === 'on'
+        try {
+          await settings.update('math-modeling-ui', { ...current, enabled: next })
+        } catch (e) { return { ok: false, error: msg(e) } }
+        return { ok: true, enabled: next, notice: next ? 'UI 看板已开启' : 'UI 看板已关闭' }
+      },
+    },
   ]
 
   const toolsReg = ctx.get('tools')
   if (toolsReg) {
     for (const t of tools) toolsReg.register(toolDef(t))
+  }
+
+  // 注册 UI 开关设置
+  if (settings) {
+    try {
+      const uiScope = settings.register('math-modeling-ui', {
+        type: 'object',
+        properties: {
+          enabled: { type: 'boolean', default: true, description: '在数学建模会话中显示进度看板' },
+        },
+        additionalProperties: false,
+      }, {
+        label: '数学建模 Workbench',
+        description: '控制数学建模会话中的进度看板显示',
+      })
+      console.error('[mathm] UI 设置已注册')
+    } catch (e) {
+      console.error('[mathm] UI 设置注册失败: ' + String((e && e.message) || e))
+    }
   }
 
   if (systemPrompt) {
@@ -821,6 +858,7 @@ export async function apply(ctx) {
           name: 'math-modeling',
           description: '数学建模（Workbench 内置）：三阶段工作流（建模手/编程手/论文手）、五门禁质检（M1/P1/P2/W1/W2）、固定交付物与完成判定。',
           whenToUse: '当用户要求数学建模、建模竞赛、建模分析、代码求解、结果可视化或生成数学建模论文时使用。',
+          source: 'math-modeling (builtin skill bundle)',
           content,
         })
         console.error('[mathm] 内置 skill math-modeling 已注册')

@@ -95,8 +95,9 @@
 # v7: 内置 skill 知识库（skills/math-modeling，随预设持久化），skill 工具可加载。
 # v8: 可移植化——BUNDLED_SKILL_ROOT 运行时相对解析（import.meta.url），移除 customSkillDirs 硬编码，apply 内 skills.register 注册内置 skill。
 # v9: 修正知识库相对路径（../skills/math-modeling）。
+# v10: UI Dock 通过会话内粘贴提示词动态加载（不随预设挂载）。
 - id: math-modeling
-  name: ./plugins/math-modeling.mjs
+  name: ./plugins/math-modeling.js
 
 # ── goals ───────────────────────────────────────────────────────────────────
 
