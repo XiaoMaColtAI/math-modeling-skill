@@ -32,6 +32,18 @@ def update_history(points: list[dict], day: str, count: int) -> list[dict]:
     return sorted(updated, key=lambda point: point["date"])
 
 
+def nice_interval(value: int, target: int = 7) -> int:
+    """选取 1/2/5×10^n 刻度间隔，使 0..value 约 target 条主刻度，避免 Y 轴过密。"""
+    if value <= 0:
+        return 1
+    rough = value / target
+    mag = 10 ** math.floor(math.log10(rough))
+    for multiple in (1, 2, 5, 10):
+        if rough <= multiple * mag:
+            return multiple * mag
+    return 10 * mag
+
+
 def render_svg(points: list[dict], repository: str, updated: str) -> str:
     samples = [(date.fromisoformat(point["date"]), int(point["count"])) for point in points]
     if not samples:
@@ -39,16 +51,19 @@ def render_svg(points: list[dict], repository: str, updated: str) -> str:
 
     width, height = 960, 540
     left, right, top, bottom = 70, 910, 105, 455
-    start, end = samples[0][0], max(samples[-1][0], samples[0][0] + timedelta(days=1))
+    start = samples[0][0]
+    # 右边界延伸到数据最后一天与更新日期的较大者，保证 X 轴覆盖当前月
+    end = max(samples[-1][0], date.fromisoformat(updated), samples[0][0] + timedelta(days=1))
     total = samples[-1][1]
-    maximum = math.ceil(total / 50) * 50 + 50
+    interval = nice_interval(total)
+    maximum = math.ceil(total / interval) * interval + interval
     span = (end - start).days
     x = lambda day: left + (day - start).days / span * (right - left)
     y = lambda value: bottom - value / maximum * (bottom - top)
     coordinates = " ".join(f"{x(day):.1f},{y(count):.1f}" for day, count in samples)
 
     grid = []
-    for value in range(0, maximum + 1, 50):
+    for value in range(0, maximum + 1, interval):
         position = y(value)
         grid.append(
             f'<path d="M{left} {position:.1f}H{right}" fill="none" stroke="#e4ddd0" stroke-width="1"/>'
@@ -63,10 +78,14 @@ def render_svg(points: list[dict], repository: str, updated: str) -> str:
         months.append(month)
         month = date(month.year + (month.month == 12), month.month % 12 + 1, 1)
     stride = max(1, math.ceil(len(months) / 7))
+    month_ticks = months[::stride]
+    # 保证最新月份（当前月）始终显示，避免被 stride 跳跃取样跳过
+    if months[-1] not in month_ticks:
+        month_ticks.append(months[-1])
     month_grid = "".join(
         f'<path d="M{x(month):.1f} {top}V{bottom}" fill="none" stroke="#e4ddd0" stroke-width="1"/>'
         f'<text x="{x(month):.1f}" y="486" text-anchor="middle">{month.month:02d}月</text>'
-        for month in months[::stride]
+        for month in month_ticks
     )
     area = f"{x(start):.1f},{bottom} {coordinates} {x(end):.1f},{bottom}"
 
