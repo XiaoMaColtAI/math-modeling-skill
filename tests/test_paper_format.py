@@ -92,6 +92,22 @@ class PaperFormatTests(unittest.TestCase):
 
         self.assertFalse(any("Markdown 格式残留" in error for error in errors), errors)
 
+    def test_internal_process_terms_are_rejected_from_docx(self):
+        doc = self._front_matter()
+        doc.add_paragraph("在导出前需完成 M1 门禁质检，并生成 Subagent 证据大纲。")
+
+        errors = pf.validate_paper_structure(doc, contest="cumcm", quality_checks=False)
+
+        self.assertGreaterEqual(sum("内部流程术语残留" in e for e in errors), 1, errors)
+
+    def test_final_quality_phrasing_does_not_trigger_internal_process_check(self):
+        doc = self._front_matter()
+        doc.add_paragraph("经最终检验，模型在测试集上的误差为 5%，质量检验达标。")
+
+        errors = pf.validate_paper_structure(doc, contest="cumcm", quality_checks=False)
+
+        self.assertFalse(any("内部流程术语残留" in e for e in errors), errors)
+
     def test_quality_validation_reports_length_formula_figure_table_and_page_gaps(self):
         doc = self._front_matter()
 

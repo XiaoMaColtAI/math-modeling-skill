@@ -319,6 +319,27 @@ def _markdown_residual_issues(doc):
     return issues
 
 
+def _internal_process_issues(doc):
+    """识别不应出现在论文正文中的内部流程术语（门禁、Subagent 质检、W1/W2 等）。
+
+    这些词只属于项目内的流程管控与对话交互，不是论文内容；一旦进入 DOCX，
+    说明正文被内部流程污染，需清除后重新导出。
+    """
+    patterns = (
+        (re.compile(r"门禁|阶段门禁|门禁状态|独立验收", re.IGNORECASE), "内部流程词：门禁"),
+        (re.compile(r"\bsubagent\b|子代理", re.IGNORECASE), "内部流程词：Subagent/子代理"),
+        (re.compile(r"质检简报|证据大纲|复现清单|质检回执|门禁回执", re.IGNORECASE), "内部验收产物"),
+        (re.compile(r"质检|回执"), "内部流程词：质检/回执"),
+    )
+    issues = []
+    for index, text in enumerate(_document_texts(doc), start=1):
+        for pattern, label in patterns:
+            if pattern.search(text):
+                excerpt = text if len(text) <= 80 else text[:77] + "..."
+                issues.append(f"疑似内部流程术语残留（文本 {index}，{label}）：{excerpt}")
+    return issues
+
+
 def _numbered_object_issues(doc, kind, object_count):
     caption_pattern = re.compile(rf"^\s*{kind}\s*(\d+)(?!\d)")
     reference_pattern = re.compile(rf"{kind}\s*(\d+)(?!\d)")
@@ -411,6 +432,7 @@ def validate_paper_structure(
     if "[待补充" in full_text:
         errors.append("论文仍含 [待补充] 占位符")
     errors.extend(_markdown_residual_issues(doc))
+    errors.extend(_internal_process_issues(doc))
     if not quality_checks:
         return errors
 
