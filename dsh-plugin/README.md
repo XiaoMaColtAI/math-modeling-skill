@@ -9,13 +9,17 @@ math-modeling-agent/                  # 预设根（整体复制即可用）
 ├── agent.cordis.yml                  # 预设 composition（插件行 + 系统提示）
 ├── preset.yml                        # 预设元数据（显示名/描述）
 ├── plugins/
-│   └── math-modeling.mjs             # 工作流引擎（零依赖 ESM 插件）
-└── skills/
-    └── math-modeling/                # 内置知识库（随预设持久化）
-        ├── SKILL.md                  # 主协议（name: math-modeling）
-        ├── references/               # 三角色规范 / 算法索引 / Subagent 调度 / 质检清单
-        ├── assets/                   # 7 类算法资料（优化/预测/评价/图论/统计/综合/ML）
-        └── tools/                    # docx/figure/latex/paper_search/pdf/xlsx 说明
+│   ├── math-modeling.js              # 工作流引擎（零依赖 ESM 插件）
+│   └── dsh-math-modeling-ui/         # 进度看板 UI 组合包（可选，重启自动加载）
+│       ├── lib/index.js              # host 侧：Connection RPC 读 state.json
+│       └── client/client.js          # client 侧：右侧悬浮看板 + 设置页开关
+├── skills/
+│   └── math-modeling/                # 内置知识库（随预设持久化）
+│       ├── SKILL.md                  # 主协议（name: math-modeling）
+│       ├── references/               # 三角色规范 / 算法索引 / Subagent 调度 / 质检清单
+│       ├── assets/                   # 7 类算法资料（优化/预测/评价/图论/统计/综合/ML）
+│       └── tools/                    # docx/figure/latex/paper_search/pdf/xlsx 说明
+└── ui-dock/                          # UI 设计说明与安装文档（可选）
 ```
 
 ---
@@ -99,9 +103,13 @@ Copy-Item -Path ".\math-modeling-agent" -Destination "$dst\math-modeling" -Recur
    - `mm_complete` —— 完成判定（门禁全 PASS + 交付物齐全 + 无漂移）
 3. 状态持久化在 `<PROJECT_ROOT>/.math-modeling/state.json`，跨会话可续接。
 
+## UI 进度看板（可选）
+
+额外把 `dsh-math-modeling-ui` 组合包安装进 DSH profile 后，数学建模会话右侧会出现可折叠的进度看板（三阶段时间线 / 五门禁状态 / 任务完成度），并可在「设置 → 插件 → 数学建模」里开关（`mm_ui_toggle` 亦可控制，持久化）。看板只读 `<PROJECT_ROOT>/.math-modeling/state.json`，不修改业务数据。
+
 ## 内置工具
 
-`mm_project_init` · `mm_state` · `mm_phase_enter` · `mm_skill_read` · `mm_gate` · `mm_check_deliverables` · `mm_complete` · `mm_log` · `mm_todo`
+`mm_project_init` · `mm_state` · `mm_phase_enter` · `mm_skill_read` · `mm_gate` · `mm_check_deliverables` · `mm_complete` · `mm_log` · `mm_todo` · `mm_ui_toggle`
 
 ## 可移植性说明
 
