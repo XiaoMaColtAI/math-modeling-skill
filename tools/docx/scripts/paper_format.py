@@ -294,6 +294,31 @@ def _content_units(text):
     return len(re.findall(r"[\u4e00-\u9fff]|[A-Za-z0-9]+", text))
 
 
+def _markdown_residual_issues(doc):
+    """识别转换后不应继续出现在 DOCX 正文中的常见 Markdown 标记。"""
+    patterns = (
+        (re.compile(r"```"), "代码围栏 ```"),
+        (re.compile(r"\*\*[^*\n]+\*\*"), "粗体标记 **...**"),
+        (re.compile(r"`[^`\n]+`"), "行内代码标记 `...`"),
+        (re.compile(r"^\s{0,3}#{1,6}\s+\S"), "标题标记 #"),
+        (re.compile(r"^\s*[-+*]\s+\S"), "行首列表标记"),
+        (re.compile(r"^\s*\$\$.+\$\$\s*$"), "行间公式定界符 $$"),
+        (re.compile(r"(?<!\$)\$(?!\$)\S(?:.*?\S)?\$(?!\$)"), "行内公式定界符 $"),
+        (
+            re.compile(r"^\s*\|?\s*:?-{3,}:?\s*(?:\|\s*:?-{3,}:?\s*)+\|?\s*$"),
+            "Markdown 表格分隔行",
+        ),
+        (re.compile(r"^\s*\|[^\n]*\|[^\n]*\|?\s*$"), "Markdown 表格行"),
+    )
+    issues = []
+    for index, text in enumerate(_document_texts(doc), start=1):
+        for pattern, label in patterns:
+            if pattern.search(text):
+                excerpt = text if len(text) <= 80 else text[:77] + "..."
+                issues.append(f"疑似 Markdown 格式残留（文本 {index}，{label}）：{excerpt}")
+    return issues
+
+
 def _numbered_object_issues(doc, kind, object_count):
     caption_pattern = re.compile(rf"^\s*{kind}\s*(\d+)(?!\d)")
     reference_pattern = re.compile(rf"{kind}\s*(\d+)(?!\d)")
@@ -366,7 +391,7 @@ def validate_paper_structure(
     official_max_pages=None,
     require_rendered_pages=True,
 ):
-    """检查官方结构、篇幅目标、公式图表、编号引用和参考文献对应关系。"""
+    """检查官方结构、Markdown 残留、篇幅目标、公式图表、编号引用和文献。"""
     profile = get_profile(contest)
     texts = [paragraph.text.strip() for paragraph in doc.paragraphs if paragraph.text.strip()]
     errors = []
@@ -385,6 +410,7 @@ def validate_paper_structure(
             errors.append(f"缺少官方结构项: {label}")
     if "[待补充" in full_text:
         errors.append("论文仍含 [待补充] 占位符")
+    errors.extend(_markdown_residual_issues(doc))
     if not quality_checks:
         return errors
 

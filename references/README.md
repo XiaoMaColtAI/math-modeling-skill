@@ -28,6 +28,7 @@
 | 可视化 | `../tools/figure/SKILL.md` |
 | 图型选择与科研绘图避坑 | `../tools/figure/references/chart-types/chart_selection.md` |
 | Subagent 调度与阶段质检 | `Subagent调度.md` |
+| 真实竞赛、截止时间与最终提交 | `交付与截止时间协议.md` |
 | 论文结构 | `roles/论文手/references/章节模板.md` |
 | Word 格式 | `roles/论文手/references/论文格式规范.md` |
 | LaTeX 格式 | `roles/论文手/references/LaTeX格式规范.md` |

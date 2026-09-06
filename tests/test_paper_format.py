@@ -63,6 +63,35 @@ class PaperFormatTests(unittest.TestCase):
 
         self.assertEqual(errors, [])
 
+    def test_markdown_residuals_are_rejected_from_docx_text(self):
+        doc = self._front_matter()
+        for residual in (
+            "**未经转换的粗体**",
+            "`inline_code`",
+            "## 未经转换的标题",
+            "- 未经转换的列表",
+            "$$x+y=1$$",
+            "| 参数 | 数值 |",
+            "| --- | --- |",
+        ):
+            doc.add_paragraph(residual)
+
+        errors = pf.validate_paper_structure(doc, contest="cumcm", quality_checks=False)
+
+        self.assertGreaterEqual(
+            sum("Markdown 格式残留" in error for error in errors),
+            7,
+            errors,
+        )
+
+    def test_plain_math_symbols_do_not_trigger_markdown_residual_check(self):
+        doc = self._front_matter()
+        doc.add_paragraph("集合 A={x | x>0}，误差为 5%，并讨论 x-y 的变化。")
+
+        errors = pf.validate_paper_structure(doc, contest="cumcm", quality_checks=False)
+
+        self.assertFalse(any("Markdown 格式残留" in error for error in errors), errors)
+
     def test_quality_validation_reports_length_formula_figure_table_and_page_gaps(self):
         doc = self._front_matter()
 
