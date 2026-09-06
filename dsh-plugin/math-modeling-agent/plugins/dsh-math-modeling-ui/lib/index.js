@@ -7,6 +7,9 @@
 // 读取 <PROJECT_ROOT>/.math-modeling/state.json，独立于 math-modeling.js 预设
 // 插件内部状态机。
 
+import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { join as pathJoin } from 'node:path';
+
 // channel：client 与 host 共享的 RPC 通道标识
 const MM_RPC_CHANNEL = '/math-modeling-ui';
 const MM_ENDPOINTS = Object.freeze({
@@ -19,7 +22,7 @@ const META_DIR = '.math-modeling';
 const STATE_NAME = 'state.json';
 
 const name = 'dsh-math-modeling-ui';
-const inject = ['connection', 'webServer'];
+const inject = ['connection', 'webServer', 'settings'];
 
 function ok(value) {
   return { ok: true, value };
@@ -38,7 +41,38 @@ export function apply(ctx) {
   const fs = ctx.get('fs');
   const sessions = ctx.get('sessions');
   const agents = ctx.get('agents');
-  const settings = ctx.get('settings');
+  // settings：优先用 inject 就绪的 ctx.settings，回退 ctx.get('settings')
+  const settings = ctx.settings ?? ctx.get('settings');
+
+  // 文件存储兜底（规避组合包 host half 拿不到 session 作用域 settings 的问题）。
+  // enabled 开关优先写 DSH settings；settings 不可用时写本地文件（节点 fs 直接写，绕开沙箱）。
+  const toggleDir = pathJoin(process.env.DSH_HOME ?? pathJoin(process.cwd(), 'dsh-home'), 'dsh-math-modeling-ui');
+  const fileTogglePath = pathJoin(toggleDir, 'settings.json');
+  function readToggleFile() {
+    try { if (existsSync(fileTogglePath)) return JSON.parse(readFileSync(fileTogglePath, 'utf8')); } catch (e) {}
+    return null;
+  }
+  function writeToggleFile(v) {
+    try { mkdirSync(toggleDir, { recursive: true }); writeFileSync(fileTogglePath, JSON.stringify(v, null, 2), { mode: 0o600 }); } catch (e) {}
+  }
+
+  // 注册 math-modeling-ui namespace 并拿到 owner scope（读写都走 scope）。
+  // 预设插件 math-modeling.js 也可能注册同名 namespace；重复注册会抛错，
+  // 此时降级走 settings.get / settings.update（settings 服务本身的方法）。
+  let uiScope = null;
+  if (settings) {
+    try {
+      uiScope = settings.register('math-modeling-ui', {
+        type: 'object',
+        properties: {
+          enabled: { type: 'boolean', default: true, description: '在数学建模会话中显示进度看板' },
+        },
+        additionalProperties: false,
+      }, { label: '数学建模 Workbench', description: '控制数学建模会话中的进度看板显示' })
+    } catch (e) {
+      uiScope = null
+    }
+  }
 
   const join = (...parts) => parts.filter(Boolean).join('/');
   const msg = (e) => String((e && e.message) || e);
@@ -48,9 +82,16 @@ export function apply(ctx) {
   }
   async function readText(p) { return fs.readText(await fs.resolve(p)); }
 
-  function readEnabled() {
-    if (!settings) return true;
-    try { const s = settings.get('math-modeling-ui'); return !(s && s.enabled === false); } catch (e) { return true; }
+  async function readEnabled() {
+    // 文件第一（与 setEnabled 写文件一致），settings 只在文件无记录时兜底。
+    try { const f = readToggleFile(); if (f && typeof f.enabled === 'boolean') return f.enabled; } catch (e) {}
+    if (settings) {
+      try {
+        if (uiScope) { const s = uiScope.get(); return !(s && s.enabled === false); }
+        const s = settings.get('math-modeling-ui'); return !(s && s.enabled === false);
+      } catch (e) {}
+    }
+    return true;
   }
 
   async function resolveCwd(sessionId) {
@@ -83,7 +124,7 @@ export function apply(ctx) {
 
   async function getState(sessionId) {
     try {
-      if (!readEnabled()) return ok({ ok: true, hidden: true, reason: 'disabled' });
+      if (!(await readEnabled())) return ok({ ok: true, hidden: true, reason: 'disabled' });
       const cwd = await resolveCwd(sessionId);
       if (!cwd) return fail('cannot detect workspace');
       const st = await readState(cwd);
@@ -117,16 +158,21 @@ export function apply(ctx) {
   }
 
   async function setEnabled(enabled) {
-    if (!settings) return fail('settings unavailable');
-    try {
-      const cur = settings.get('math-modeling-ui') || {};
-      await settings.update('math-modeling-ui', Object.assign({}, cur, { enabled: !!enabled }));
-      return ok({ enabled: !!enabled });
-    } catch (e) { return fail(msg(e)); }
+    const next = !!enabled;
+    // 文件第一（每次写文件，与 readEnabled 一致）；settings 同步写（尽力而为）
+    try { writeToggleFile({ enabled: next }); } catch (e) {}
+    if (settings) {
+      try {
+        if (uiScope) { await uiScope.update({ enabled: next }); }
+        else { await settings.update('math-modeling-ui', { enabled: next }); }
+      } catch (e) { /* settings 可选，失败不影响文件持久化 */ }
+    }
+    return ok({ enabled: next });
   }
 
-  function getEnabled() {
-    return ok({ enabled: readEnabled() });
+  async function getEnabled() {
+    const e = await readEnabled();
+    return ok({ enabled: e });
   }
 
   return ctx.connection.rpc.handle(MM_RPC_CHANNEL, async (endpoint, payload = {}) => {
@@ -135,7 +181,7 @@ export function apply(ctx) {
         return await getState(payload?.sessionId);
       }
       if (endpoint === MM_ENDPOINTS.getEnabled) {
-        return getEnabled();
+        return await getEnabled();
       }
       if (endpoint === MM_ENDPOINTS.setEnabled) {
         return await setEnabled(payload?.enabled === true);

@@ -228,11 +228,14 @@ window.__ModuleLoader__.load({
       }, []);
       function toggle() {
         if (busy || enabled === null) return;
+        var target = !enabled;
         setBusy(true);
-        rpcCall(MM_ENDPOINTS.setEnabled, { enabled: !enabled }).then(function (res) {
+        rpcCall(MM_ENDPOINTS.setEnabled, { enabled: target }).then(function (res) {
           if (res && res.ok) setEnabled(!!res.value.enabled);
           setBusy(false);
-        }).catch(function () { setBusy(false); });
+        }).catch(function () {
+          setBusy(false);
+        });
       }
       var noteText = enabled ? "看板已开启：切换到数学建模 Workbench 预设的会话即可自动显示。" : "看板已关闭：数学建模会话不再显示看板。";
       return h("div", { className: "mmu-set" },
@@ -266,13 +269,13 @@ window.__ModuleLoader__.load({
           }
         );
       });
-      // 设置 → 插件页内的「数学建模」tab（不污染一级导航）
-      ctx.slots.inject("settings.plugins.tab", function () {
+      // 设置入口（settings.section：dsh-pocket 已验证该槽位能把 inject 返回值传给组件）
+      ctx.slots.inject("settings.section", function () {
         return ctx.slots.register(
           {
-            name: "settings.plugins.tab",
+            name: "settings.section",
             id: "math-modeling",
-            order: 20,
+            order: 11,
             label: function () { return "数学建模"; },
             inject: function () { return { rpcCall: rpcCall }; },
           },
