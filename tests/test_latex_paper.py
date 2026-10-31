@@ -61,6 +61,60 @@ class LatexPaperTests(unittest.TestCase):
             self.assertTrue((root / "paper" / "official.cls").is_file())
             self.assertTrue((root / "paper" / "cover.tex").is_file())
 
+    def test_project_entries_skip_configured_names(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            (root / ".git").mkdir()
+            (root / ".git" / "HEAD").write_text("metadata", encoding="utf-8")
+            (root / "sections" / ".cache").mkdir(parents=True)
+            (root / "sections" / ".cache" / "data").write_text("cache", encoding="utf-8")
+            (root / "sections" / "main.tex").write_text("source", encoding="utf-8")
+            (root / "worktree").mkdir()
+            (root / "worktree" / ".git").write_text("gitdir: elsewhere", encoding="utf-8")
+
+            original_paths = {
+                path.relative_to(root).as_posix() for path in root.rglob("*")
+            }
+            self.assertEqual(original_paths, {
+                ".git", ".git/HEAD", "sections", "sections/.cache",
+                "sections/.cache/data", "sections/main.tex", "worktree",
+                "worktree/.git",
+            })
+
+            with patch.object(
+                latex_paper, "PROJECT_IGNORED_NAMES", frozenset({".git", ".cache"})
+            ):
+                paths = {
+                    path.relative_to(root).as_posix()
+                    for path in latex_paper._project_entries(root)
+                }
+
+            self.assertEqual(paths, {"sections", "sections/main.tex", "worktree"})
+
+    def test_project_files_only_yields_nonignored_files(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            (root / "main.tex").write_text("source", encoding="utf-8")
+            (root / ".keep").write_text("kept", encoding="utf-8")
+            (root / "figures").mkdir()
+            (root / "figures" / "plot.png").write_bytes(b"image")
+            (root / ".git").mkdir()
+            (root / ".git" / "HEAD").write_text("metadata", encoding="utf-8")
+
+            original_paths = {
+                item.relative_to(root).as_posix()
+                for item in root.rglob("*") if item.is_file()
+            }
+            self.assertEqual(original_paths, {
+                "main.tex", ".keep", "figures/plot.png", ".git/HEAD",
+            })
+
+            paths = {
+                path.relative_to(root).as_posix()
+                for path in latex_paper._project_files(root)
+            }
+            self.assertEqual(paths, {"main.tex", ".keep", "figures/plot.png"})
+
     def test_supports_generic_template_with_nested_main_and_provenance(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
