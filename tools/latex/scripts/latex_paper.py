@@ -15,12 +15,14 @@ import tempfile
 import time
 import uuid
 from collections import Counter
+from collections.abc import Iterator
 from datetime import datetime, timezone
 from pathlib import Path
 
 TEMPLATE_ROOT = Path(__file__).resolve().parents[1] / "assets" / "templates"
 SKILL_ROOT = Path(__file__).resolve().parents[3]
 PROJECT_MANIFEST = "latex-project.json"
+PROJECT_IGNORED_NAMES = frozenset({".git"})
 CONTESTS = {"cumcm", "mcm-icm", "generic"}
 ENGINES = {"xelatex", "lualatex", "pdflatex"}
 GRAPHIC_SUFFIXES = (".pdf", ".png", ".jpg", ".jpeg")
@@ -100,8 +102,22 @@ def _writable(path: Path) -> Path:
     return resolved
 
 
+def _project_entries(root: Path) -> Iterator[Path]:
+    """按统一的忽略规则遍历项目条目。"""
+    for directory, dirs, files in os.walk(root):
+        dirs[:] = sorted(name for name in dirs if name not in PROJECT_IGNORED_NAMES)
+        for name in sorted(dirs + [
+            name for name in files if name not in PROJECT_IGNORED_NAMES
+        ]):
+            yield Path(directory) / name
+
+
+def _project_files(root: Path) -> Iterator[Path]:
+    return (path for path in _project_entries(root) if path.is_file())
+
+
 def _reject_symlinks(root: Path) -> None:
-    if root.is_symlink() or any(path.is_symlink() for path in root.rglob("*")):
+    if root.is_symlink() or any(path.is_symlink() for path in _project_entries(root)):
         raise ValueError("LaTeX 项目包含符号链接，拒绝处理")
 
 
@@ -115,9 +131,7 @@ def _sha256(path: Path) -> str:
 
 def _tree_sha256(path: Path) -> str:
     digest = hashlib.sha256()
-    items = [path] if path.is_file() else sorted(
-        item for item in path.rglob("*") if item.is_file()
-    )
+    items = [path] if path.is_file() else sorted(_project_files(path))
     for item in items:
         relative = item.name if path.is_file() else item.relative_to(path).as_posix()
         digest.update(relative.encode("utf-8"))
@@ -132,8 +146,7 @@ def _file_hashes(path: Path) -> dict[str, str]:
         return {"main.tex": _sha256(path)}
     return {
         item.relative_to(path).as_posix(): _sha256(item)
-        for item in sorted(path.rglob("*"))
-        if item.is_file()
+        for item in sorted(_project_files(path))
     }
 
 
@@ -248,7 +261,7 @@ def prepare_project(
     source = (template_path or (TEMPLATE_ROOT / contest)).resolve()
     if not source.exists():
         raise FileNotFoundError(f"LaTeX 模板不存在：{source}")
-    items = [source] if source.is_file() else [source, *source.rglob("*")]
+    items = [source] if source.is_file() else [source, *_project_entries(source)]
     if any(item.is_symlink() for item in items):
         raise ValueError("模板中包含符号链接，拒绝复制")
     if source.is_file() and source.suffix.casefold() != ".tex":
@@ -278,7 +291,10 @@ def prepare_project(
     temporary = output.parent / f".{output.name}.tmp-{uuid.uuid4().hex}"
     try:
         if source.is_dir():
-            shutil.copytree(source, temporary)
+            shutil.copytree(
+                source, temporary,
+                ignore=shutil.ignore_patterns(*PROJECT_IGNORED_NAMES),
+            )
         else:
             temporary.mkdir()
             shutil.copy2(source, temporary / "main.tex")
@@ -386,8 +402,8 @@ def _resource_binding_issues(root: Path) -> list[str]:
     if not isinstance(template_files, dict):
         issues.append("LaTeX 资源绑定清单无效：template_files 必须为对象")
         template_files = {}
-    for path in sorted(root.rglob("*")):
-        if not path.is_file() or path == manifest_path:
+    for path in sorted(_project_files(root)):
+        if path == manifest_path:
             continue
         relative = path.relative_to(root)
         if relative.parts[0] == "build":
@@ -651,7 +667,7 @@ def source_bundle_sha256(main_tex: Path) -> str:
     root = _project_root(main_tex)
     _reject_symlinks(root)
     digest = hashlib.sha256()
-    for path in sorted(item for item in root.rglob("*") if item.is_file()):
+    for path in sorted(_project_files(root)):
         relative = path.relative_to(root)
         if relative.parts[0] == "build":
             continue
@@ -1324,7 +1340,7 @@ def build_paper(
         shutil.copytree(
             root,
             isolated_root,
-            ignore=shutil.ignore_patterns("build"),
+            ignore=shutil.ignore_patterns("build", *PROJECT_IGNORED_NAMES),
         )
         isolated_main = isolated_root / main_argument
         isolated_output = isolated_root / "build"
